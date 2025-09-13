@@ -36,10 +36,16 @@
             <td th:text="${person.firstName}"></td>
             <td th:text="${person.lastName}"></td>
             <td th:text="${person.email}"></td>
-            <td><a th:href="@{/persons/{id}(id=${person.id})}">View profile</a></td>
+            <td sec:authorize="hasAuthority('VIEW_PERSON')"><a th:href="@{/persons/{id}(id=${person.id})}">View profile</a></td>
         </tr>
         </tbody>
     </table>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var viewPersonAuthority = /*[[${#authorization.expression('hasAuthority(''VIEW_PERSON'')')}]]*/ false;
+        /*]]>*/
+    </script>
 
     <script>
         window.addEventListener('load', function() {
@@ -55,20 +61,28 @@
                         persons.forEach(function(person) {
                             const tableRowElement = document.createElement("tr");
                             let tdElement = document.createElement("td");
-                            tdElement.innerHTML = person.id;
+
+                            tdElement.textContent = person.id;
                             tableRowElement.appendChild(tdElement);
                             tdElement = document.createElement("td");
-                            tdElement.innerHTML = person.firstName;
+                            tdElement.textContent = person.firstName;
                             tableRowElement.appendChild(tdElement);
                             tdElement = document.createElement("td");
-                            tdElement.innerHTML = person.lastName;
+                            tdElement.textContent = person.lastName;
                             tableRowElement.appendChild(tdElement);
                             tdElement = document.createElement("td");
-                            tdElement.innerHTML = person.email;
+                            tdElement.textContent = person.email;
                             tableRowElement.appendChild(tdElement);
-                            tdElement = document.createElement("td");
-                            tdElement.innerHTML = '<a href="/persons/' + person.id + '">View profile</a>';
-                            tableRowElement.appendChild(tdElement);
+
+                            if(viewPersonAuthority) {
+                                tdElement = document.createElement("td");
+                                const link = document.createElement("a");
+                                link.href = "/persons/" + person.id;
+                                link.textContent = "View profile";
+                                tdElement.appendChild(link);
+                                tableRowElement.appendChild(tdElement);
+                            }
+
 
                             tableContent.appendChild(tableRowElement);
                         });

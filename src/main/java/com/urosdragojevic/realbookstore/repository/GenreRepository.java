@@ -34,8 +34,11 @@ public class GenreRepository {
             while (rs.next()) {
                 genreList.add(new Genre(rs.getInt(1), rs.getString(2)));
             }
+
+            LOG.info("Preuzeto {} žanrova iz baze", genreList.size());
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom preuzimanja svih žanrova", e);
         }
         return genreList;
     }
@@ -49,8 +52,11 @@ public class GenreRepository {
             while (rs.next()) {
                 genreList.add(new Genre(rs.getInt(1), rs.getString(2)));
             }
+
+            LOG.info("Preuzeto {} žanrova za knjigu sa ID={}", genreList.size(), bookId);
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom preuzimanja žanrova za knjigu sa ID={}", bookId, e);
         }
         return genreList;
     }

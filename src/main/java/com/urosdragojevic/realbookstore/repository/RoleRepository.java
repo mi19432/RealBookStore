@@ -35,8 +35,11 @@ public class RoleRepository {
                 String name = rs.getString(2);
                 roles.add(new Role(id, name));
             }
+            LOG.info("Preuzeto {} rola za korisnika sa ID={}", roles.size(), userId);
+
         } catch (SQLException e) {
-            e.printStackTrace();
+
+            LOG.error("Greška prilikom preuzimanja rola za korisnika sa ID={}", userId, e);
         }
         return roles;
     }

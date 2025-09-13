@@ -32,8 +32,9 @@ public class PersonRepository {
             while (rs.next()) {
                 personList.add(createPersonFromResultSet(rs));
             }
+            LOG.info("Preuzeto {} osoba iz baze", personList.size());
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom preuzimanja svih osoba", e);
         }
         return personList;
     }
@@ -48,6 +49,11 @@ public class PersonRepository {
             while (rs.next()) {
                 personList.add(createPersonFromResultSet(rs));
             }
+
+            LOG.info("Preuzeto {} osoba za termin pretrage '{}'", personList.size(), searchTerm);
+
+        } catch (SQLException e) {
+            LOG.error("Greška prilikom pretrage osoba za termin '{}'", searchTerm, e);
         }
         return personList;
     }
@@ -61,7 +67,7 @@ public class PersonRepository {
                 return createPersonFromResultSet(rs);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom preuzimanja osobe sa ID={}", personId, e);
         }
 
         return null;
@@ -74,7 +80,7 @@ public class PersonRepository {
         ) {
             statement.executeUpdate(query);
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom brisanja osobe sa ID={}", personId, e);
         }
     }
 
@@ -99,7 +105,7 @@ public class PersonRepository {
             statement.setString(2, email);
             statement.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom ažuriranja osobe sa ID={}", personUpdate.getId(), e);
         }
     }
 }

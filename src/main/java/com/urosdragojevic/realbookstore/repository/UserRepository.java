@@ -1,9 +1,11 @@
 package com.urosdragojevic.realbookstore.repository;
 
+import com.urosdragojevic.realbookstore.audit.AuditLogger;
 import com.urosdragojevic.realbookstore.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -32,9 +34,11 @@ public class UserRepository {
                 String username1 = rs.getString(2);
                 String password = rs.getString(3);
                 return new User(id, username1, password);
+            }else{
+                LOG.warn("Korisnik '{}' nije pronađen u bazi", username);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom pretrage korisnika '{}'", username, e);
         }
         return null;
     }
@@ -44,9 +48,15 @@ public class UserRepository {
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery(query)) {
-            return rs.next();
+             boolean valid = rs.next();
+             if (valid) {
+                LOG.info("Uspešna validacija kredencijala za korisnika '{}'", username);
+             } else {
+                LOG.warn("Neuspešna validacija kredencijala za korisnika '{}'", username);
+             }
+             return valid;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom provere kredencijala za korisnika '{}'", username, e);
         }
         return false;
     }
@@ -56,9 +66,14 @@ public class UserRepository {
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
         ) {
-            statement.executeUpdate(query);
+            int affectedRows = statement.executeUpdate(query);
+            if (affectedRows > 0) {
+                LOG.info("Uspešno obrisan korisnik sa ID={}", userId);
+            } else {
+                LOG.warn("Nije pronađen korisnik sa ID={} za brisanje", userId);
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom brisanja korisnika sa ID={}", userId, e);
         }
     }
 }

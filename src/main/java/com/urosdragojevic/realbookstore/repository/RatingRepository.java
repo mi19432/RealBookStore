@@ -34,18 +34,24 @@ public class RatingRepository {
                     preparedStatement.setInt(1, rating.getRating());
                     preparedStatement.setInt(2, rating.getBookId());
                     preparedStatement.setInt(3, rating.getUserId());
-                    preparedStatement.executeUpdate();
+                    int affectedRows = preparedStatement.executeUpdate();
+                    if (affectedRows > 0) {
+                        LOG.info("Uspešno ažuriran rejting korisnika {} za knjigu {}", rating.getUserId(), rating.getBookId());
+                    }
                 }
             } else {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(query3)) {
                     preparedStatement.setInt(1, rating.getBookId());
                     preparedStatement.setInt(2, rating.getUserId());
                     preparedStatement.setInt(3, rating.getRating());
-                    preparedStatement.executeUpdate();
+                    int affectedRows = preparedStatement.executeUpdate();
+                    if (affectedRows > 0) {
+                        LOG.info("Uspešno kreiran rejting korisnika {} za knjigu {}", rating.getUserId(), rating.getBookId());
+                    }
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom kreiranja ili ažuriranja rejtinga za korisnika {} i knjigu {}", rating.getUserId(), rating.getBookId(), e);
         }
     }
 
@@ -58,8 +64,10 @@ public class RatingRepository {
             while (rs.next()) {
                 ratingList.add(new Rating(rs.getInt(1), rs.getInt(2), rs.getInt(3)));
             }
+
+            LOG.info("Preuzeto {} rejtinga za knjigu sa ID={}", ratingList.size(), bookId);
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom preuzimanja ratinga za knjigu sa ID={}", bookId, e);
         }
         return ratingList;
     }
@@ -67,6 +75,7 @@ public class RatingRepository {
     public float getRatingForBook(int bookId) {
         List<Rating> allRatings = getAll(bookId);
         if (allRatings.isEmpty()) {
+            LOG.warn("Knjiga sa ID={} nema nijedan rating", bookId);
             return 0;
         }
         return (float) allRatings.stream().map((Rating::getRating)).reduce(Integer::sum).orElseThrow() / (long) allRatings.size();

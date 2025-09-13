@@ -1,8 +1,10 @@
 package com.urosdragojevic.realbookstore.controller;
 
+import com.urosdragojevic.realbookstore.audit.AuditLogger;
 import com.urosdragojevic.realbookstore.domain.*;
 import com.urosdragojevic.realbookstore.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +31,12 @@ public class BooksController {
 
     @Autowired
     private PersonRepository personRepository;
+    private static final AuditLogger auditLogger = AuditLogger.getAuditLogger(BooksController.class);
 
     @GetMapping({"/", "/books"})
+    @PreAuthorize("hasAuthority('VIEW_BOOKS_LIST')")
     public String home(Model model) {
+        auditLogger.audit("Korisnik je pristupio listi knjiga");
         model.addAttribute("books", bookRepository.getAll());
         return "books";
     }
@@ -39,6 +44,7 @@ public class BooksController {
     @GetMapping("/books/{id}")
     public String book(Model model, @PathVariable int id) {
 
+        auditLogger.audit("Korisnik je otvorio detalje za knjigu sa id=" + id);
         Book book = bookRepository.get(id);
 
         List<Genre> genres = genreRepository.getAllForBook(id);
@@ -68,7 +74,9 @@ public class BooksController {
     }
 
     @GetMapping("/create-form")
+    @PreAuthorize("hasAuthority('CREATE_BOOK')")
     public String CreateForm(Model model) {
+        auditLogger.audit("Korisnik je otvorio formu za dodavanje knjige");
         model.addAttribute("genres", genreRepository.getAll());
         return "create-form";
     }
@@ -76,14 +84,17 @@ public class BooksController {
     @GetMapping(value = "/books/search", produces = "application/json")
     @ResponseBody
     public List<Book> search(@RequestParam("query") String query) throws SQLException {
+        auditLogger.audit("Korisnik je pokrenuo pretragu sa upitom: '" + query + "'");
         return bookRepository.search(query);
     }
 
     @PostMapping("/books")
+    @PreAuthorize("hasAuthority('CREATE_BOOK')")
     public String createBook(NewBook book) {
         List<Genre> genreList = this.genreRepository.getAll();
         List<Genre> genresToInsert = book.getGenres().stream().map(bookGenreId -> genreList.stream().filter(genre -> genre.getId() == bookGenreId).findFirst().get()).collect(Collectors.toList());
         long id = bookRepository.create(book, genresToInsert);
+        auditLogger.audit("Kreirana je nova knjiga sa id=" + id + ", naslov='" + book.getTitle() + "'");
         return "redirect:/books?id=" + id;
     }
 }

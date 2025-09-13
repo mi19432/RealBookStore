@@ -36,12 +36,12 @@ public class BookRepository {
                 bookList.add(book);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greska prilikom preuzimanja svih knjiga",e);
         }
         return bookList;
     }
 
-    public List<Book> search(String searchTerm) throws SQLException {
+    public List<Book> search(String searchTerm){
         List<Book> bookList = new ArrayList<>();
         String query = "SELECT DISTINCT b.id, b.title, b.description, b.author FROM books b, books_to_genres bg, genres g" +
                 " WHERE b.id = bg.bookId" +
@@ -54,12 +54,16 @@ public class BookRepository {
             while (rs.next()) {
                 bookList.add(createBookFromResultSet(rs));
             }
+        } catch (SQLException e) {
+
+            LOG.error("Greška prilikom pretrage knjiga za termin: {}", searchTerm, e);
+
         }
         return bookList;
     }
 
     public Book get(int bookId) {
-        String query = "SELECT id, title, description, author, FROM books WHERE books.id = " + bookId;
+        String query = "SELECT id, title, description, author FROM books WHERE books.id = " + bookId;
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery(query)) {
@@ -67,7 +71,7 @@ public class BookRepository {
                 return createBookFromResultSet(rs);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom preuzimanja knjige sa ID={}", bookId, e);
         }
         return null;
     }
@@ -94,12 +98,12 @@ public class BookRepository {
                         statement2.setInt(2, genre.getId());
                         statement2.executeUpdate();
                     } catch (SQLException e) {
-                        e.printStackTrace();
+                        LOG.error("Greška prilikom dodele žanra={} za knjigu sa ID={}", genre, finalId, e);
                     }
                 });
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Greška prilikom dodavanja knjige: {}", book, e);
         }
         return id;
     }
@@ -117,7 +121,8 @@ public class BookRepository {
             statement.executeUpdate(query3);
             statement.executeUpdate(query4);
         } catch (SQLException e) {
-            e.printStackTrace();
+
+            LOG.error("Greška prilikom brisanja knjige sa ID={}", bookId, e);
         }
     }
 
